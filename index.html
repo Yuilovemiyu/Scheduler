@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Store Scheduler Pro</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging-compat.js"></script>
+<style>
+body{font-family:Arial;padding:20px;background:#f4f6f8}
+.container{max-width:700px;margin:auto;background:#fff;padding:20px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+button{padding:10px;width:100%;margin:5px 0;border:none;border-radius:8px;background:#005bac;color:#fff}
+</style>
+</head>
+<body>
+<div class="container">
+<h2>Store Scheduler Pro</h2>
+<button onclick="initNotifications()">Enable Push Notifications</button>
+<h3 id="today"></h3>
+</div>
+
+<script>
+// 🔥 Firebase Config (REPLACE WITH YOUR OWN)
+const firebaseConfig = {
+  apiKey: "AIzaSyADXlQJcV5KJXTfYBK5qscv7gd88-XNlKo",
+  authDomain: "today-s-reporter-3dceb.firebaseapp.com",
+  projectId: "today-s-reporter-3dceb",
+  messagingSenderId: "199675534168",
+  appId: "1:199675534168:web:ff4dee799c1a0749c2e32d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const messaging = firebase.messaging();
+
+const stores=[
+{name:"Anabu",restDay:1},{name:"Crossing East",restDay:1},{name:"Tanza",restDay:1},{name:"Brookside",restDay:1},
+{name:"Binan Bayan",restDay:1},{name:"Molino",restDay:1},{name:"Manggahan",restDay:1},{name:"Pacita",restDay:1},
+{name:"Paradahan",restDay:2},{name:"San Pedro",restDay:2},{name:"Bacoor",restDay:2},{name:"Tagaytay",restDay:2},
+{name:"Dasmarinas",restDay:2},{name:"GMA",restDay:2},{name:"Kawit",restDay:2},{name:"Gentri Jr.",restDay:4}
+];
+
+function available(d){return stores.filter(s=>s.restDay!==d.getDay());}
+
+function todayStore(){
+let t=new Date(),list=available(t);
+if(!list.length)return "No store";
+let i=Math.floor((t-new Date(t.getFullYear(),0,0))/86400000);
+return list[i%list.length].name;
+}
+
+document.getElementById("today").innerText="Today's Store: "+todayStore();
+
+// 🔔 Push Notification Permission
+async function initNotifications(){
+  const permission = await Notification.requestPermission();
+  if(permission !== 'granted'){
+    alert('Permission denied');
+    return;
+  }
+
+  const token = await messaging.getToken({
+    vapidKey: "BFCnVOrXOvvALKbcSPDyp50BS9ZXqxIVvQhZY3nxyEnPLORHh5JdWCl_GQl88l_QpgAgbT6KxC0bOFBv8gR3fp8"
+  });
+
+  console.log("FCM Token:", token);
+  alert("Notifications enabled!");
+}
+
+// Handle foreground messages
+messaging.onMessage((payload) => {
+  console.log('Message received:', payload);
+  alert(payload.notification.title + " - " + payload.notification.body);
+});
+
+// Register service worker
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('firebase-messaging-sw.js');
+}
+</script>
+</body>
+</html>
